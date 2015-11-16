@@ -9,8 +9,8 @@ picture =
         (cycleSmooth 2 [(0, 0), (100, 100), (200, 200), (300, 300), (400, 400)])
         -- translate param 2
         (
-            ( scale (cycleSmooth 8 [(1, 1), (2, 2)])
-                ( withGenPaint (cycleSmooth 8 [blue, white]) (cycleSmooth 8 [1.00, 0.00])
+            ( scale (repeatSmooth (1, 1) [(0, (1, 1)), (10, (2, 2))])
+                ( withGenPaint (always blue) (repeatSmooth 1 [(0, 1), (2, 0.5), (4, 0), (10, 0)])
                     (circle (always 75)) 
                     `plus` 
                     (translate 
