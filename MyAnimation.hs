@@ -2,28 +2,62 @@ module MyAnimation where
 
 import Animation
 
-waves :: Double -> Animation
-waves x = 
-        translate
-            (always (400, 300)) 
-            ( combine [wave i | i <- [1..x]])
+-- x, y, speed, radius, startX, startY, endX, endY, angle
+type Cart = (Double, Double, Double, Double, Double, Double, Double, Double, Double)
 
-transmitter :: Animation
-transmitter = 
-        translate 
-            (always (400, 300))
-            (circle (always 25))
+wheelBody :: Double -> Animation
+wheelBody radius = 
+        withBorder (always black) (always 8) 
+            (withoutPaint (circle (always radius)))
 
-wave :: Time -> Animation
-wave t =
-        scale 
-            (repeatSmooth (0, 0) [(t, (0, 0)), ((t + 10), (5, 5))])
-            ( withGenPaint (always blue) (repeatSmooth 0 [(t, 1), ((t + 4), 0), ((t + 10), 0)])
-                (circle (always 100))
+spoke :: Double -> Animation
+spoke radius =
+        combine [
+            rotate (always (i * 90))
+            (translate (always ((-4, -(radius))))
+                (withPaint (always black)
+                    (rect (always 8) (always (radius * 2)))
+                )
+            )
+        | i <- [1..2]]
+
+wheel :: Double -> Double -> Double -> Double -> Animation
+wheel x y speed radius =
+        translate (always (x, y))
+            (rotate (spinner speed)
+            (wheelBody radius `plus` spoke radius))
+
+cart :: Double -> Double -> Animation
+cart x y =
+        withPaint (always black)
+            (polygon [(20, 0), (((x * 3) + 40), 0), ((x * 3), y), (x, y)])
+
+minecart :: Cart -> Animation
+minecart (x, y, speed, radius, startX, startY, endX, endY, angle) =
+            translate (repeatSmooth (startX, startY) [(0, (startX, startY)), (speed, (endX, endY))])
+            (rotate (always angle)
+                (
+                    (cart x y) 
+                    `plus` 
+                    ((wheel x y speed radius) 
+                    `plus` 
+                    (wheel (x * 3) y speed radius))
+                )
             )
 
-signal :: Double -> Animation
-signal x = (waves x) `plus` transmitter
+cartProperties :: [Cart]
+cartProperties = 
+                [
+                    (60, 70, 10, 30, -300, 300, 1000, 400, 0),
+                    (30, 40, 20, 15, -400, 500, 1000, 100, -24),
+                    (40, 50, 15, 15, 1000, -100, -300, 200, -15)
+                ]
 
-test :: Double -> IO ()
-test num = writeFile "test.svg" (svg 800 600 (signal num))
+allCarts :: [Cart] -> Animation 
+allCarts carts = combine (map minecart carts)
+
+picture :: Animation
+picture = allCarts cartProperties
+
+test :: IO ()
+test = writeFile "test.svg" (svg 800 600 picture)
