@@ -2,21 +2,28 @@ module MyAnimation where
 
 import Animation
 
-picture :: Animation
-picture = arc 2 `plus` arc 0 
+waves :: Double -> Animation
+waves x = 
+        translate
+            (always (400, 300)) 
+            ( combine [wave i | i <- [1..x]])
 
-arc :: Time -> Animation
-arc t =
-        (translate 
-            (repeatSmooth (0, 0) [(t, (0, 0)), ((t + 10), (400, 400))])
-            (
-                ( scale (repeatSmooth (1, 1) [((0), (1, 1)), (10, (3, 3))])
-                        ( withGenPaint (always blue) (repeatSmooth t [(t, 1), ((t + 4), 0), ((t + 10), 0)])
-                            (polygon [(60, 0), (35, 35), (0, 60), (40, 40)])
-                        )
-                )
+transmitter :: Animation
+transmitter = 
+        translate 
+            (always (400, 300))
+            (circle (always 25))
+
+wave :: Time -> Animation
+wave t =
+        scale 
+            (repeatSmooth (0, 0) [(t, (0, 0)), ((t + 10), (5, 5))])
+            ( withGenPaint (always blue) (repeatSmooth 0 [(t, 1), ((t + 4), 0), ((t + 10), 0)])
+                (circle (always 100))
             )
-        )
 
-test :: IO ()
-test = writeFile "test.svg" (svg 800 600 picture)
+signal :: Double -> Animation
+signal x = (waves x) `plus` transmitter
+
+test :: Double -> IO ()
+test num = writeFile "test.svg" (svg 800 600 (signal num))
