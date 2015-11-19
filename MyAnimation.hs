@@ -3,19 +3,20 @@ module MyAnimation where
 import Animation
 
 picture :: Animation
-picture = 
-    (combine [
+picture = arc 2 `plus` arc 0 
+
+arc :: Time -> Animation
+arc t =
         (translate 
-            (cycleSmooth (2 + i) [(0, 0), (100, 100), (200, 200), (300, 300), (400, 400)])
+            (repeatSmooth (0, 0) [(t, (0, 0)), ((t + 10), (400, 400))])
             (
-                ( scale (repeatSmooth (1, 1) [((0 + i), (1, 1)), ((10 + i), (2, 2))])
-                        ( withGenPaint (always blue) (repeatSmooth 1 [(0, 1), ((2 + i), 0.5), ((4 + i), 0), ((10 + i), 0)])
-                            (polygon [(100, 0), (70, 70), (0, 100), (60, 60)])
+                ( scale (repeatSmooth (1, 1) [((0), (1, 1)), (10, (3, 3))])
+                        ( withGenPaint (always blue) (repeatSmooth t [(t, 1), ((t + 4), 0), ((t + 10), 0)])
+                            (polygon [(60, 0), (35, 35), (0, 60), (40, 40)])
                         )
                 )
             )
         )
-    | i <- [1..5]])
 
 test :: IO ()
 test = writeFile "test.svg" (svg 800 600 picture)
