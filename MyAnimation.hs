@@ -2,17 +2,20 @@ module MyAnimation where
 
 import Animation
 
--- position cartSpeed, radius, startPoint, endPoint, angle, wheelSpeed
+-- position, cartSpeed, radius, startPoint, endPoint, angle, wheelSpeed
 type Cart = (Point, Double, Double, Point, Point, Double, Double)
 
 picture :: Animation
 picture = allCarts cartProperties
 
+-- builds the wheels body (without spokes)
 wheelBody :: Double -> Animation
 wheelBody radius = 
         withBorder (always black) (always 8) 
             (withoutPaint (circle (always radius)))
 
+-- builds a pair of spokes and moves them to correct position based on the radius of the wheel,
+-- rotates them so they are perpendicular to each other
 spoke :: Double -> Animation
 spoke radius =
         combine [
@@ -24,17 +27,20 @@ spoke radius =
             )
         | i <- [1..2]]
 
+-- builds each wheel, moves it, rotates it, and combines it with the spokes
 wheel :: Point -> Double -> Double -> Animation
 wheel position speed radius =
         translate (always position)
             (rotate (spinner speed)
             (wheelBody radius `plus` spoke radius))
 
+-- builds the carts body (without the wheels)
 cart :: Point -> Animation
 cart (x, y) =
         withPaint (always black)
             (polygon [((x - 40), 0), (((x * 3) + 40), 0), ((x * 3), y), (x, y)])
 
+-- builds a complete minecart
 minecart :: Cart -> Animation
 minecart (position, cartSpeed, radius, startPoint, endPoint, angle, wheelSpeed) =
             moveCart (cartSpeed, startPoint, endPoint)
@@ -48,16 +54,20 @@ minecart (position, cartSpeed, radius, startPoint, endPoint, angle, wheelSpeed) 
                     )
                 )
 
-secondWheel :: Point -> Point
-secondWheel (x, y) = ((x * 3), y)
-
+-- calculates the speed of a pair of wheels
 speed :: Double -> Double
 speed radius = 50 / radius
 
+-- helper function to move the second wheel to the correct place
+secondWheel :: Point -> Point
+secondWheel (x, y) = ((x * 3), y)
+
+-- helper function to move the cart to a position
 moveCart :: (Double, Point, Point) -> Animation -> Animation
 moveCart (cartSpeed, startPoint, endPoint) =
         translate (repeatSmooth startPoint [(0, startPoint), (cartSpeed, endPoint)])
 
+-- list of properties for each cart
 cartProperties :: [Cart]
 cartProperties = 
                 [
@@ -66,6 +76,8 @@ cartProperties =
                     ((40, 50), 15, 15, (1000, -100), (-300, 200), -15, -15)
                 ]
 
+-- maps each element of the list to an attribute of a minecart and combines them all for
+-- a complete animation
 allCarts :: [Cart] -> Animation 
 allCarts carts = combine (map minecart carts)
 
